@@ -1,45 +1,35 @@
-from flask import Flask
+from flask import Flask, render_template, request, jsonify
+from pymongo import MongoClient
+import os
 
 app = Flask(__name__)
 
+MONGO_URL = os.environ.get("MONGO_URL", "mongodb://mongo:27017/devopsdb")
+client = MongoClient(MONGO_URL)
+db = client.devopsdb
+users_collection = db.users
+
 @app.route('/')
 def home():
-    return """
-    <html>
-    <head>
-        <title>My DevOps App</title>
-        <style>
-            body { 
-                background: #1e1e2f; 
-                color: #f0f0f0; 
-                font-family: Arial, sans-serif; 
-                text-align: center; 
-                padding-top: 100px;
-            }
-            h1 { color: #ffcc00; font-size: 50px; }
-            p { font-size: 20px; }
-            .button {
-                background-color: #ff6600;
-                color: white;
-                padding: 15px 30px;
-                text-decoration: none;
-                font-size: 20px;
-                border-radius: 8px;
-                margin-top: 30px;
-                display: inline-block;
-            }
-            .button:hover {
-                background-color: #ff9933;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>🚀 Welcome to My DevOps App!</h1>
-        <p>Learn Docker, Flask, and DevOps the fun way!</p>
-        <a href="#" class="button">Get Started</a>
-    </body>
-    </html>
-    """
+    return render_template('index.html')
 
-if __name__ == '__main__':
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    users = list(users_collection.find({}, {"_id": 0, "name": 1}))
+    return jsonify(users)
+
+@app.route('/api/users', methods=['POST'])
+def add_user():
+    data = request.get_json()
+    if not data or 'name' not in data:
+        return jsonify({"error": "Name is required"}), 400
+    users_collection.insert_one({"name": data['name']})
+    return jsonify({"message": "User added"}), 201
+
+if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
+

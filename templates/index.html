@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Flask DevOps App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-rocket"></i> Welcome to My DevOps App!</h1>
+        <p>This is a simple Flask app deployed with Docker & CI/CD.</p>
+
+        <!-- User Form -->
+        <form id="userForm">
+            <input type="text" id="username" placeholder="Enter your name" required>
+            <button type="submit" class="button">Submit</button>
+        </form>
+
+        <!-- Display Users -->
+        <h2>Users:</h2>
+        <ul id="userList"></ul>
+
+        <a href="/about" class="button">Learn More</a>
+    </div>
+
+    <footer>
+        &copy; 2025 Akram Belhouadjeb - DevOps Portfolio Project
+    </footer>
+
+    <script>
+        async function fetchUsers() {
+            const res = await fetch('/api/users');
+            const users = await res.json();
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user.name;
+                userList.appendChild(li);
+            });
+        }
+
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('username').value;
+            await fetch('/api/users', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name})
+            });
+            document.getElementById('username').value = '';
+            fetchUsers();
+        });
+
+        // Load users on page load
+        fetchUsers();
+    </script>
+</body>
+</html>
